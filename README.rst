@@ -1,5 +1,5 @@
 ===========
-py-cryptotp
+py_cryptotp
 ===========
 
 
@@ -19,5 +19,5 @@ py-cryptotp
 Handle OTP verification without database or session using cryptography
 
 
-* Free software: MIT license
-* Documentation: https://py-cryptotp.readthedocs.io.
+This package is under construction
+~~~~~~~~~~~

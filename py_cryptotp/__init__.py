@@ -3,3 +3,5 @@
 __author__ = """Shamim Ferdous"""
 __email__ = 'shamimferdous5@gmail.com'
 __version__ = '0.0.1'
+
+from .py_cryptotp import Cryptotp
