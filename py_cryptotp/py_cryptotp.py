@@ -7,42 +7,32 @@ from Crypto.Cipher import AES
 # creating crypto object
 class Cryptotp:
     """
-    Attributes =>\n
-    otp_length: int
-        length of the generated otp
-    otp_duration: int (minute)
-        minutes the otp will be valid. 
-    key: bytes
-        16 digit secret key. Keep it safe
-
+    key: str
+        16 digit secret key used for hashing the OTP. Keep it safe
     """
 
-    length: int
-    duration: int
     key: bytes
 
-    def __init__(self, otp_length, otp_duration, key):
-        self.length = otp_length
-        self.duration = otp_duration
+    def __init__(self, key):
         self.key = bytes(key, 'utf-8')
 
         # creating new crypto object
         self.crypto = AES.new(self.key, AES.MODE_OFB)
 
-    def generate(self):
+    def generate(self, otp_length: int, otp_duration: int):
         """
-        this method returns a dict with two items
+        this method takes "otp_length" and "otp_duration" as params and returns a dict with the "raw_otp" and "hashed_otp"
 
-        raw_otp => a random number of given length \n
-        hashed_otp => a hashed string which underneth contains the raw_otp and the expiration_time which equals to given duration
+        raw_otp - a random number of given length \n
+        hashed_otp - a hashed string which underneth contains the raw_otp and the expiration_time which equals to given duration
         """
 
         # generating otp by calling random_generator method
-        raw_otp = self.__random_number_generator(self.length)
+        raw_otp = self.__otp_generator(otp_length)
 
         # converting raw_otp and expiration timestamp into a string separeted by '?'
         otp_w_time_signature = str(raw_otp) + "?" + \
-            str(datetime.now() + timedelta(minutes=self.duration))
+            str(datetime.now() + timedelta(minutes=otp_duration))
 
         # hasing the string
         hashed_otp_in_bytes = self.crypto.encrypt(
@@ -87,7 +77,7 @@ class Cryptotp:
         return False
 
     # random n digit number genetor
-    def __random_number_generator(self, length):
+    def __otp_generator(self, length):
         start_range = 10**(length - 1)
         end_range = (10**length) - 1
 
