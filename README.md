@@ -12,20 +12,20 @@ py_cryptotp eliminates this problem by using cryptography underneath. `This pack
 # Installation and Usage
 
 
-```
+```python
 $ pip install py-cryptotp
 ```
 
 Once the installation is done import py_cryptotp and create a new object:
 
-```
+```python
 from py_cryptotp import Cryptotp
 
 otp_handler = Cryptotp(key='YourSecretKeyHere') # keep this secret key secure
 ```
 
 Then use the `generate` method to generate a new otp. Here `otp_length` is the length of the otp and `otp_duration` is the expiration time of the otp in **minutes**
-```
+```python
 raw_otp, hashed_otp = otp_handler.generate(otp_length=6, otp_duration=2)
 # raw_otp - 123456
 # hashed_otp - a45256bbeb6d90aad762ce9552e458064aa85054a.1611669734
@@ -33,7 +33,7 @@ raw_otp, hashed_otp = otp_handler.generate(otp_length=6, otp_duration=2)
 It will return the `raw_otp` and `hashed_otp`. Send the `raw_otp` to user via SMS, Email or anyway you choose and send the `hashed_otp` to the client. If your client is [React](https://reactjs.org) or [Vue](https://vuejs.org) you can just store it in a state variable. Or you can also use `Local Storage`, `Session Storage` etc to store it. As it's completely hashed and irreversible it doesn't matter where you're storing it.
 
 Then when the user gets the otp and enters it to client send back the `hashed_otp` with the user given otp and use the `validate` method:
-```
+```python
 if otp_handler.validate(user_give_otp, hashed_otp):
         # do further operations accordingly 
 ```
