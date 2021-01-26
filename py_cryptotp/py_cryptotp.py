@@ -1,77 +1,76 @@
-from random import randint
+import random
 from datetime import datetime, timedelta
-from base64 import b64encode, b64decode
-from Crypto.Cipher import AES
+import hmac
+import hashlib
 
 
 # creating crypto object
 class Cryptotp:
-    """
-    key: str
-        16 digit secret key used for hashing the OTP. Keep it safe
-    """
 
     key: bytes
+    identifier: str
 
-    def __init__(self, key):
+    def __init__(self, key: str, ):
+        '''
+        Parameters:
+            key: The secret key which will be used to hash data. Keep it safe
+        '''
+
         self.key = bytes(key, 'utf-8')
-
-        # creating new crypto object
-        self.crypto = AES.new(self.key, AES.MODE_OFB)
+        self.identifier = str(random.random())
 
     def generate(self, otp_length: int, otp_duration: int):
         """
-        this method takes "otp_length" and "otp_duration" as params and returns a dict with the "raw_otp" and "hashed_otp"
+        returns a raw_otp with given length and and a hashed_otp with given expiration time
 
-        raw_otp - a random number of given length \n
-        hashed_otp - a hashed string which underneth contains the raw_otp and the expiration_time which equals to given duration
+        Parameters:
+            otp_length: length of the OTP which will generated
+            otp_duration: minutes the OTP will be valid
         """
 
         # generating otp by calling random_generator method
         raw_otp = self.__otp_generator(otp_length)
 
         # converting raw_otp and expiration timestamp into a string separeted by '?'
-        otp_w_time_signature = str(raw_otp) + "?" + \
-            str(datetime.now() + timedelta(minutes=otp_duration))
+        expiration_time = int(
+            (datetime.now() + timedelta(minutes=otp_duration)).timestamp())
+
+        otp_w_signatures = str(raw_otp) + "?" + \
+            str(expiration_time) + self.identifier
 
         # hasing the string
-        hashed_otp_in_bytes = self.crypto.encrypt(
-            bytes(otp_w_time_signature, 'utf-8'))
+        hashed_otp = self.__hash_generator(
+            otp_w_signatures) + '.' + str(expiration_time)
 
-        hashed_otp = b64encode(self.crypto.iv).decode() + \
-            "?" + b64encode(hashed_otp_in_bytes).decode()
-
-        # returning otp dict
-        otp = {
-            "raw_otp": raw_otp,
-            "hashed_otp": hashed_otp
-        }
-
-        return otp
+        # returning generated otp and hashed otp
+        return raw_otp, hashed_otp
 
     def validate(self, user_given_otp, hashed_otp):
         """
-        This method takes the user_given_otp and hashed_otp string as parameter and returns a boolean 
-        It destructs, decrypts and retrives the actual otp and expiration time
-        Then it checks if the user given otp matches with actual otp and the expiration time is in future
+        Verifies OTP and returns Boolean value
+
+        Parameters:
+            user_given_otp: OTP entered by user
+            hashed_otp: The hashed otp previously sent to the client
         """
 
         # destructuring the hashed_otp
-        hashed_otp_object = hashed_otp.split('?')
-        iv = b64decode(hashed_otp_object[0])
-        hash_string = b64decode(hashed_otp_object[1])
+        hashed_otp_object = hashed_otp.split('.')
+        hashed_otp = hashed_otp_object[0]
+        expiration_time = int(hashed_otp_object[1])
 
-        # decrypting the hashed otp
-        de_crypto = AES.new(self.key, AES.MODE_OFB, iv=iv)
-        raw_otp_string = de_crypto.decrypt(hash_string).decode()
-        raw_otp_object = raw_otp_string.split('?')
+        # checking if the expiration time is in future
+        if expiration_time < int(datetime.now().timestamp()):
+            return False
 
-        # converting expiration time string to datetime
-        expiration_time = datetime.strptime(
-            raw_otp_object[1], '%Y-%m-%d %H:%M:%S.%f')
+        # hashing user_give_otp and validating
+        user_given_otp_w_signatures = str(user_given_otp) + "?" + \
+            str(expiration_time) + self.identifier
 
-        # validating input
-        if datetime.now() <= expiration_time and int(user_given_otp) == int(raw_otp_object[0]):
+        hashed_user_given_otp = self.__hash_generator(
+            user_given_otp_w_signatures)
+
+        if hashed_user_given_otp == hashed_otp:
             return True
 
         return False
@@ -81,4 +80,11 @@ class Cryptotp:
         start_range = 10**(length - 1)
         end_range = (10**length) - 1
 
-        return randint(start_range, end_range)
+        return random.randint(start_range, end_range)
+
+    # SHA256 hash generator
+    def __hash_generator(self, data_string):
+        hash = hmac.new(self.key, data_string.encode(
+        ), digestmod=hashlib.sha256).hexdigest()
+
+        return hash
