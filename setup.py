@@ -4,8 +4,11 @@
 
 from setuptools import setup, find_packages
 
-with open('README.md', encoding='utf-8') as readme_file:
-    readme = readme_file.read()
+# with open('README.md', encoding='utf-8') as readme_file:
+#     readme = readme_file.read()
+
+with open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as readme:
+    README = readme.read()
 
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
