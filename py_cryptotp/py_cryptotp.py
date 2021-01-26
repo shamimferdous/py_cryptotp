@@ -4,7 +4,6 @@ import hmac
 import hashlib
 
 
-# creating crypto object
 class Cryptotp:
 
     key: bytes
